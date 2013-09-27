@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Performance Testing</title>
+
+</head>
+<body>
+	<canvas id="canvas" height="300px" width="670px" style="border-style:solid;background:#27272B">
+		<script>
+		window.requestAnimFrame = (function(callback)
+		{
+			return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame ||
+			window.oRequestAnimationFrame || window.msRequestAnimationFrame || function(callback) {
+				window.setTimeout(callback, 1000/6);
+			};
+		})();
+		
+		// GLOBALS
+		var canvas = document.querySelector('canvas');
+		var ctx = canvas.getContext("2d");
+		var balls = [];
+		var ballsCount = 58;
+		var mousePos = 0;
+		var dx,dy;
+		var gravity = 0.5;
+		var px = [100,100,100,100,100,115,130,145,160,175,190,190,190,190,190,230,230,230,230,230,250,270,280,280,270,250,250,265,280,310,310,310,310,310,330,350,370,330,350,310,330,350,370,400,400,400,400,400,420,440,460,480,500,520,520,520,520,520];
+		var py = [200,225,250,275,300,215,240,265,280,295,200,225,250,275,300,200,225,250,275,300,200,205,220,235,250,250,265,280,295,200,225,250,275,300,200,200,200,250,250,300,300,300,300,200,225,250,275,300,220,240,260,240,220,200,225,250,275,300];
+		var oldvx = 0, oldvy = 0;
+		
+		function animate()
+		{
+			// update
+						
+			
+			ctx.clearRect(0,0,canvas.width,canvas.height);
+			
+			for(var i=0;i<ballsCount;i++)
+			{
+				//var nextX = amplitude * Math.sin(time*2*Math.PI/period) + balls[i].centerX;
+				//balls[i].x = nextX;
+				balls[i].update();
+			}
+			
+			mouse.draw();
+			
+			// request new frame
+			requestAnimFrame(function()
+			{
+				animate();
+			});
+		}
+		
+		function Ball()
+		{
+			this.radius = 5;
+			this.x = Math.random() * canvas.width /2 + this.radius;
+			this.y = Math.random() * canvas.height /2 + this.radius +50;
+			this.centerX = canvas.width/2 - this.radius/2;
+			this.startX = this.x;
+			this.startY = this.y;
+			this.vx = 0;
+			this.vy = 0;
+			this.mass = 2;
+			this.f = 0;
+			this.k = 100;
+			this.t = 5;
+			this.angle = 0;
+			this.cos = 0;
+			this.sin = 0;
+			var deg=0;
+			var i=1;
+			var random_color = 'rgb(' +
+			        parseInt(Math.random() * 255) + ',' +
+			        parseInt(Math.random() * 255) + ',' +
+			        parseInt(Math.random() * 255) + ')';
+			var grd = ctx.createRadialGradient(238,50,10,238,50,300);
+			grd.addColorStop(0,'#8ED6FF');
+			grd.addColorStop(0,'#004CB3');
+			this.color = random_color;
+			
+			this.update = function()
+			{							
+					var distance = Math.sqrt(
+						((this.x - mouse.x) * (this.x - mouse.x))
+						+ ((this.y - mouse.y) * (this.y - mouse.y))
+					);
+					//console.log(distance);
+					
+					this.doWork = function()
+					{
+						if(Math.sqrt(((mouse.x-this.startX)*(mouse.x-this.startX))+((mouse.y-this.startY)*(mouse.y-this.startY))) < Math.sqrt(((this.x-this.startX)*(this.x-this.startX))+((this.y-this.startY)*(this.y-this.startY))))
+						{
+							this.vx = (this.x-this.startX)/this.t;
+							this.vy = (this.y-this.startY)/this.t;
+							this.x -= this.vx;
+							this.y -= this.vy;
+						}
+						
+						/*deg*=i;
+						var nextx = this.x+(this.radius*Math.cos(deg));
+						var nexty = this.y+(this.radius*Math.sin(deg));
+						this.x=nextx;
+						this.y=nexty;
+						
+						i++;
+						console.log("Doin work");*/
+					}
+					
+					if(distance < mouse.radius + this.radius + 1)
+					{
+						//this.x = mouse.x;
+						//this.y = mouse.y;
+						this.angle = -Math.atan((this.startY - mouse.y)/(this.startX - mouse.x));
+						this.cos = mouse.radius*Math.cos(this.angle);
+						this.sin = mouse.radius*Math.sin(this.angle);
+						// Circle Equation
+						//console.log("Colliding");
+						// v = at
+						// f = ma
+						// v = (f/m)t
+						
+						var f = 10; // Force of mouse circle
+						var m = 1;  // Mass of Ball
+						var v = (f/m)*this.t;
+						
+						var quadrant;
+						
+						if(this.startX - mouse.x < 0)
+						{
+							// Quadrant 1 or 4
+							if(this.startY - mouse.y < 0)
+							{
+								// Quadrant 4
+								this.x = mouse.x - this.cos;
+								this.y = mouse.y + this.sin;
+								//console.log("4");
+								this.doWork();
+							}
+							else
+							{
+								// Quadrant 1
+								this.x = mouse.x - this.cos;
+								this.y = mouse.y + this.sin;
+								//console.log("1");
+								this.doWork();
+							}
+						}
+						else
+						{
+							// Quadrant 2 or 3
+							if(this.startY - mouse.y < 0)
+							{
+								// Quadrant 3
+								this.x = mouse.x + this.cos;
+								this.y = mouse.y - this.sin;
+								//console.log("3");
+								this.doWork();
+							}
+							else
+							{
+								// Quadrant 2
+								this.x = mouse.x + this.cos;
+								this.y = mouse.y - this.sin;
+								//console.log("2");
+								this.doWork();
+							}
+						}
+					}
+					else
+					{	
+						this.vx = (this.x-this.startX)/this.t;
+						this.vy = (this.y-this.startY)/this.t;
+						this.x -= this.vx;
+						this.y -= this.vy;
+					}
+					
+					var distances = Math.sqrt(
+						((this.x - this.startX)*(this.x - this.startX)) +
+						((this.y - this.startY)*(this.y - this.startY))
+					);
+					this.radius = distances*.06 + 5;
+					
+					
+					
+					// Hooke's law
+					//this.f = -this.k*(distances);
+					//console.log(this.f);
+					
+					ctx.fillStyle = this.color;
+					ctx.beginPath();
+					ctx.arc(this.x,this.y,this.radius,0,Math.PI*2,false);
+					ctx.fill();
+					ctx.closePath();
+					
+					//ctx.beginPath();
+					//ctx.moveTo(this.startX,this.startY);
+					//ctx.lineTo(this.x,this.y);
+					//ctx.stroke();
+			};
+			this.collision = function()
+			{
+				
+			};
+		}
+		
+		function init()
+		{
+			canvas.addEventListener('mousemove', function(evt)
+			{
+				mousePos = getMousePos(evt);
+				//var message = 'Mouse Position: ' + mousePos.x + ', ' + mousePos.y;
+				//writeMessage(message);
+			}, false);
+		}
+		
+		function writeMessage(message)
+		{
+			ctx.clearRect(0,0,canvas.width, 50);
+			ctx.font = '18pt Calibri';
+			ctx.fillStyle = 'black';
+			ctx.fillText(message, 10, 30);
+		}
+	
+		function getMousePos(evt)
+		{
+			var rect = canvas.getBoundingClientRect();
+			return {
+				x: evt.clientX - rect.left,
+				y: evt.clientY - rect.top
+			};
+		}
+		
+		function MouseCircle()
+		{
+			this.radius = 75;
+			this.x = canvas.width/2;
+			this.y = canvas.height/2;
+			this.color = 'rgba(0,0,0,.2)';
+			
+			this.draw = function()
+			{
+				this.x = mousePos.x;
+				this.y = mousePos.y;
+				//ctx.beginPath();
+				ctx.arc(this.x,this.y,this.radius,0,Math.PI*2,false);
+				//ctx.fillStyle = 'blue';
+				//ctx.fill();
+				//ctx.lineWidth = 1;
+				//ctx.strokeStyle ='white';
+				//ctx.stroke();
+				ctx.closePath();
+			}
+		} 
+		//var particle = new Particle();
+		var mouse = new MouseCircle();
+		
+		for(var i=0;i<ballsCount;i++)
+		{
+			var ball = new Ball();
+			balls.push(ball);
+			balls[i].startX = px[i];
+			balls[i].startY = py[i]-100;
+			//console.log(balls[i]);
+		}
+		init();
+		animate();
+		</script>
+</body>
+</html>
