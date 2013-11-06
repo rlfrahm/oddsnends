@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+		overflow:hidden;
+		background:#666;
+      }
+	  #container
+	  {
+		border:solid 3px #999;
+	  }
+	  input
+	  {
+		border-radius:1px;
+	  }
+	  .position-input
+	  {
+		
+	  }
+	  a
+	  {
+		color:#ced;
+		display:none;
+	  }
+	  #positions
+	  {
+		float:left;
+	  }
+    </style>
+  </head>
+  <body>
+  <section id="positions">
+	<input type="text" id="x-val" class="position-input" placeholder="x:300" onchange="changeXPosition()" size="4">
+	<input type="text" id="y-val" class="position-input" placeholder="y:300" onchange="changeYPosition()" size="4">
+	<input type="text" id="z-val" class="position-input" placeholder="z:300" onchange="changeZPosition()" size="4">
+	<a id="tip">Camera Position</a>
+  </section>
+  
+  <input type="text" id="z-val" placeholder="z:300" onchange="changeZPosition()" size="4">
+    <div id="container"></div>
+    <script src="js/three.min.js"></script>
+	<script src="js/jquery-2.0.3.min.js"></script>
+    <script defer="defer">
+      // revolutions per second
+      var angularSpeed = 0.2; 
+      var lastTime = 0;
+	  var numcubes = 200;
+ 
+      // this function is executed on each animation frame
+      function animate(){
+        // update
+        //var time = (new Date()).getTime();
+        //var timeDiff = time - lastTime;
+        //var angleChange = angularSpeed * timeDiff * 2 * Math.PI / 1000;
+        
+        //lastTime = time;
+ 
+        // render
+        renderer.render(scene, camera);
+ 
+        // request new frame
+        requestAnimationFrame(function(){
+            animate();
+        });
+      }
+
+      // renderer
+      var renderer = new THREE.WebGLRenderer();
+	  //console.log(renderer);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+ 
+      // camera
+	  //var camera = new THREE.OthographicCamera(width
+      var camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+	  var dis = 300;
+      camera.position.z = dis;
+	  camera.position.x = dis*1.25;
+	  camera.position.y = dis*1.15;
+	  camera.rotation.z = Math.PI/6;
+	  camera.rotation.x = -Math.PI/4;
+	  camera.rotation.y = Math.PI/4;
+ 
+		var axes = new THREE.AxisHelper(100);
+		
+      // scene
+      var scene = new THREE.Scene();
+        var x=0,y=0,z=0;
+		for(var i=0;i<numcubes;i++)
+		{
+			// cube
+			var cube = new THREE.Mesh(new THREE.CubeGeometry(10, 10, 10), new THREE.MeshLambertMaterial());
+			cube.overdraw = true;
+			cube.position.x = x;
+			cube.position.z = z;
+			if(x<=50) {
+				multiplier = i*2;
+			} else {
+				multiplier = i*.5;
+			}
+			//cube.position.y = y;
+			cube.position.y = Math.random() * multiplier;
+			
+			scene.add(cube);
+			
+			x+=10;
+			if(x===100)
+			{
+				x=0;
+				y=0;
+				z+=10;
+			}
+			
+		}
+		scene.add(axes);
+      
+	  var ambientlight = new THREE.AmbientLight(0x000044);
+	  //scene.add(ambientlight);
+	  
+	  var directionallight = new THREE.DirectionalLight(0xffffff);
+	  directionallight.position.set(dis,dis,-dis).normalize();
+	  scene.add(directionallight);
+ 
+      // start animation
+      animate();
+	  
+	  function changeXPosition()
+	  {
+		var x = parseInt($("#x-val").val());
+		camera.position.x = x;
+		$("#x-val").val("").attr("placeholder","x:" + x);
+	  }
+	  
+	  function changeYPosition()
+	  {
+	  var y = parseInt($("#y-val").val());
+		camera.position.y = y;
+		$("#y-val").val("").attr("placeholder","y:" + y);
+	  }
+	  
+	  function changeZPosition()
+	  {
+	  var z = parseInt($("#z-val").val());
+		camera.position.z = z;
+		$("#z-val").val("").attr("placeholder","z:" + z);
+	  }
+	  
+	  $("#positions").hover(
+	  function() {
+		$("#tip").show();
+	  },
+	  function() {
+		$("#tip").hide();
+	  });
+    </script>
+  </body>
+</html>
